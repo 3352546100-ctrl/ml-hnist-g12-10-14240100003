@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>支持向量机 · 机器学习交互演示中心</title>
+<meta name="description" content="先理解最大间隔、支持向量、软间隔与核技巧的理论，再看 SVM 如何在环形数据上找出最宽的分界路。">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="glass-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-glyph">ML</span>
+      <span class="brand-name">机器学习交互演示中心</span>
+    </a>
+    <nav class="nav-links" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="model-evaluation.html">模型评估</a>
+      <a href="linear-regression.html">线性回归</a>
+      <a href="logistic-regression.html">Logistic 回归</a>
+      <a href="decision-tree.html">决策树</a>
+      <a href="neural-network.html">神经网络</a>
+      <a href="svm.html" class="active" aria-current="page">支持向量机</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <a class="crumb" href="../index.html">← 返回首页</a>
+      <p class="eyebrow">板块 06 / 10</p>
+      <h1 class="page-title">支持向量机</h1>
+      <p class="page-sub">支持向量机（SVM）不满足于"能分开"，还要找一条<b>最宽</b>的分界路。本板块先讲清最大间隔、支持向量、软间隔与核技巧四件事，再进入交互演示——在环形数据上切换核函数，看线性核如何束手无策、高斯核如何游刃有余。</p>
+    </div>
+  </section>
+
+  <!-- ============ 理论区（先于交互模块） ============ -->
+  <section class="theory">
+    <div class="container">
+      <h2 class="section-title">理论与公式</h2>
+      <p class="theory-lead">在所有能把两类分开的超平面中，SVM 挑<b>两侧间隔最大</b>的那一个——离两边都尽量远，泛化通常更好。决定这条边界的是少数贴着间隔边的样本，它们叫<b>支持向量</b>；而面对线性分不开的数据，<b>核技巧</b>让 SVM 在高维空间里继续画直线，对应回原空间就是弯曲的边界。</p>
+      <div class="formula-grid">
+
+        <div class="formula-card">
+          <h4>最大间隔：找最宽的路</h4>
+          <div class="formula-figure" aria-hidden="true">
+            <svg viewBox="0 0 240 110">
+              <line x1="86" y1="6" x2="142" y2="104" stroke="#1d1d1f" stroke-width="2"></line>
+              <line x1="64" y1="6" x2="120" y2="104" stroke="rgba(0,0,0,0.30)" stroke-width="1.2" stroke-dasharray="5 4"></line>
+              <line x1="108" y1="6" x2="164" y2="104" stroke="rgba(0,0,0,0.30)" stroke-width="1.2" stroke-dasharray="5 4"></line>
+              <circle cx="34" cy="26" r="4" fill="#0071e3" fill-opacity="0.85"></circle>
+              <circle cx="52" cy="66" r="4" fill="#0071e3" fill-opacity="0.85"></circle>
+              <circle cx="70" cy="24" r="4" fill="#0071e3" fill-opacity="0.85"></circle>
+              <circle cx="40" cy="88" r="4" fill="#0071e3" fill-opacity="0.85"></circle>
+              <circle cx="182" cy="30" r="4" fill="#b9b9be"></circle>
+              <circle cx="200" cy="62" r="4" fill="#b9b9be"></circle>
+              <circle cx="166" cy="80" r="4" fill="#b9b9be"></circle>
+              <circle cx="206" cy="20" r="4" fill="#b9b9be"></circle>
+              <circle cx="70" cy="42" r="6" fill="none" stroke="#0071e3" stroke-width="1.8"></circle>
+              <circle cx="156" cy="72" r="6" fill="none" stroke="#0071e3" stroke-width="1.8"></circle>
+              <text x="96" y="60" font-size="9.5" fill="#6e6e73">间隔</text>
+            </svg>
+          </div>
+          <div class="formula">min <span class="frac"><span class="num">1</span><span class="den">2</span></span>‖<i>w</i>‖<sup>2</sup>&nbsp;&nbsp;s.t.&nbsp;&nbsp;<i>y<sub>i</sub></i>(<i>w</i>·<i>x<sub>i</sub></i> + <i>b</i>) ≥ 1</div>
+          <p class="formula-note">间隔宽度 = 2/‖w‖：把 w 缩得越小路越宽，但要保证每个样本都落在间隔正确的一侧（约束条件）。描述这组约束的优化问题叫原问题。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>支持向量：少数派决定一切</h4>
+          <div class="formula"><i>f</i>(<i>x</i>) = Σ<sub><i>i</i></sub> <i>α<sub>i</sub></i><i>y<sub>i</sub></i> <i>K</i>(<i>x<sub>i</sub></i>, <i>x</i>) + <i>b</i></div>
+          <p class="formula-note">求解对偶问题后，每个样本对应一个系数 α：落在间隔边界上的样本 α &gt; 0——它们就是支持向量（图中描环的点）；远处的样本 α = 0，删掉也不影响边界。预测只需对支持向量做核函数求和。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>软间隔与惩罚 C</h4>
+          <div class="formula"><i>L</i> = Σ<sub><i>i</i></sub> max(0, 1 − <i>y<sub>i</sub></i><i>f</i>(<i>x<sub>i</sub></i>)) + <span class="frac"><span class="num">1</span><span class="den">2<i>C</i></span></span>‖<i>w</i>‖<sup>2</sup></div>
+          <p class="formula-note">现实数据总有噪声，允许少数样本越界（合页损失 max(0,·) 只惩罚违反间隔者）。C 控制权衡：<b>C 大</b>→几乎不错分、间隔窄、易过拟合；<b>C 小</b>→容忍错分、间隔宽、更平滑。演示里拖动 C 可以直接看到边界变宽变窄。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>核技巧：隐式升维</h4>
+          <div class="formula"><i>K</i>(<i>x</i>, <i>z</i>) = <i>φ</i>(<i>x</i>)·<i>φ</i>(<i>z</i>)&nbsp;&nbsp;&nbsp;高斯核：<i>K</i> = exp(−<i>γ</i>‖<i>x</i>−<i>z</i>‖<sup>2</sup>)</div>
+          <p class="formula-note">对偶形式里数据只以两两内积出现——不必显式构造高维映射 φ，直接用核函数 K 代替即可。高斯 RBF 核对应无限维空间：近处相似、远处趋零，恰好能把"圆环包圆心"这类数据在原空间围出环形边界。γ 越大，相似度衰减越快、边界越局部。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 交互模块 ============ -->
+  <section class="demo">
+    <div class="container-wide">
+
+      <div class="control-card">
+        <div class="threshold-head">
+          <div>
+            <span class="threshold-label">惩罚系数 C</span>
+            <span class="threshold-value" id="c-value">3.2</span>
+          </div>
+          <div class="threshold-actions">
+            <button type="button" class="btn-quiet" id="btn-linear">线性</button>
+            <button type="button" class="btn-quiet active" id="btn-rbf">高斯 RBF</button>
+            <button type="button" class="btn-quiet" id="btn-poly">多项式</button>
+            <button type="button" class="btn-quiet" id="btn-train">开始训练</button>
+            <button type="button" class="btn-quiet" id="btn-reset">重置</button>
+            <button type="button" class="btn-quiet" id="btn-resample">换一批数据</button>
+          </div>
+        </div>
+        <input type="range" id="c" min="0" max="100" step="1" value="60" aria-label="惩罚系数 C（对数刻度）">
+        <div class="threshold-scale">
+          <span>0.05 宽间隔 · 容忍错分</span>
+          <span>SMO 逐对优化对偶系数 α（对数刻度）</span>
+          <span>50 窄间隔 · 几乎不错分</span>
+        </div>
+        <div class="threshold-head" style="margin-top:16px; margin-bottom:6px;">
+          <div>
+            <span class="threshold-label">核宽度 γ（RBF / 多项式核）</span>
+            <span class="threshold-value" id="gamma-value" style="font-size:20px;">3.0</span>
+          </div>
+        </div>
+        <input type="range" id="gamma" min="0.5" max="20" step="0.5" value="3" aria-label="核宽度 γ">
+        <div class="threshold-scale">
+          <span>0.5 平滑 · 远距离仍相似</span>
+          <span>RBF：相似度随距离指数衰减</span>
+          <span>20 局部 · 容易过拟合</span>
+        </div>
+      </div>
+
+      <div class="panels">
+
+        <section class="panel" id="panel-dom" style="grid-area:a;">
+          <header class="panel-head">
+            <div>
+              <h3>决策边界与间隔带</h3>
+              <p>实线是 f = 0 边界，两条虚线是 f = ±1 间隔边；描环样本是支持向量</p>
+            </div>
+            <span class="panel-tag accent" id="dom-tag">支持向量 —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="dom-svg" viewBox="0 0 640 320" role="img" aria-label="环形样本、SVM 决策边界、间隔带与支持向量"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-alpha" style="grid-area:b;">
+          <header class="panel-head">
+            <div>
+              <h3>对偶系数 α</h3>
+              <p>每个训练样本的 α 值，蓝色的就是支持向量</p>
+            </div>
+            <span class="panel-tag" id="alpha-tag">训练中</span>
+          </header>
+          <div class="panel-body">
+            <svg id="alpha-svg" viewBox="0 0 360 320" role="img" aria-label="各训练样本的对偶系数柱状图，非零者为支持向量"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-kern" style="grid-area:c;">
+          <header class="panel-head">
+            <div>
+              <h3>核相似度曲线</h3>
+              <p>当前核函数下，相似度 K 随两点距离的衰减</p>
+            </div>
+            <span class="panel-tag accent" id="kern-tag">高斯 RBF 核</span>
+          </header>
+          <div class="panel-body">
+            <svg id="kern-svg" viewBox="0 0 360 320" role="img" aria-label="当前核函数的相似度随距离变化的曲线"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-params" style="grid-area:d;">
+          <header class="panel-head">
+            <div>
+              <h3>参数与指标</h3>
+              <p>模型的稀疏性与泛化表现</p>
+            </div>
+          </header>
+          <div class="panel-body" style="display:block;">
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">支持向量（占比）</span><span class="metric-value" id="p-sv">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">训练准确率</span><span class="metric-value" id="p-train">—</span></div>
+                <div class="metric-bar"><span id="b-train"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">测试准确率</span><span class="metric-value" id="p-test">—</span></div>
+                <div class="metric-bar"><span id="b-test"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">当前超参数</span><span class="metric-value small" id="p-param">—</span></div>
+              </div>
+            </div>
+            <p class="metric-foot" id="p-note">数据：同心圆环（内圈类 1 · 外圈类 0）· 线性核无法分开</p>
+            <span class="warn-badge" id="warn-badge" hidden>提示</span>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="drag-hint">提示：先选"线性"点训练，看它对着环形数据一筹莫展；再切"高斯 RBF"，边界立刻学会画圈。把 γ 拉到 20 附近，注意边界开始"孤岛化"、测试准确率下滑——那就是过拟合。</p>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>支持向量机 · 机器学习交互演示中心</p>
+    <p>数据由页面内合成，仅用于教学演示，2026</p>
+  </div>
+</footer>
+
+<div id="selftest" hidden></div>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/demo-svm.js"></script>
+</body>
+</html>

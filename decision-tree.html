@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>决策树 · 机器学习交互演示中心</title>
+<meta name="description" content="先理解熵、基尼不纯度与信息增益的理论，再看一棵决策树如何一步步把平面切成一块块纯区域。">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="glass-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-glyph">ML</span>
+      <span class="brand-name">机器学习交互演示中心</span>
+    </a>
+    <nav class="nav-links" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="model-evaluation.html">模型评估</a>
+      <a href="linear-regression.html">线性回归</a>
+      <a href="logistic-regression.html">Logistic 回归</a>
+      <a href="decision-tree.html" class="active" aria-current="page">决策树</a>
+      <a href="neural-network.html">神经网络</a>
+      <a href="svm.html">支持向量机</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <a class="crumb" href="../index.html">← 返回首页</a>
+      <p class="eyebrow">板块 04 / 10</p>
+      <h1 class="page-title">决策树</h1>
+      <p class="page-sub">决策树用一系列"如果 x₁ ≤ 0.43 就往左、否则往右"的规则，把特征空间切成一块块矩形区域。本板块先讲清不纯度、信息增益与停止条件三件事，再进入交互演示——亲手让树一步步生长，看它如何用直线围出弯曲的边界。</p>
+    </div>
+  </section>
+
+  <!-- ============ 理论区（先于交互模块） ============ -->
+  <section class="theory">
+    <div class="container">
+      <h2 class="section-title">理论与公式</h2>
+      <p class="theory-lead">决策树每次提问一个"特征 ≤ 阈值？"的是非题，把一个节点里的样本分成两份，再把同样的流程递归套在两份样本上，直到每个节点足够"纯"。评价纯度的尺子是<b>不纯度</b>：基尼系数或信息熵。每次分裂都选让<b>信息增益</b>（加权不纯度下降）最大的那个特征与阈值——这就是 CART 算法的贪心策略。</p>
+      <div class="formula-grid">
+
+        <div class="formula-card">
+          <h4>不纯度：熵与基尼</h4>
+          <div class="formula"><i>H</i> = − Σ <i>p<sub>k</sub></i>·log<sub>2</sub><i>p<sub>k</sub></i>&nbsp;&nbsp;&nbsp;<i>G</i> = 1 − Σ <i>p<sub>k</sub></i><sup>2</sup></div>
+          <p class="formula-note">p<sub>k</sub> 是节点内第 k 类样本的占比。两类完全混合时（p = 0.5 / 0.5）不纯度最大，只剩一类时为 0。熵来自信息论，基尼计算更快，两者选出的树通常几乎一样——演示里可以切换对比。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>信息增益：分裂好不好</h4>
+          <div class="formula">Δ = <i>I</i>(<i>D</i>) − <span class="frac"><span class="num"><i>n<sub>L</sub></i></span><span class="den"><i>n</i></span></span><i>I</i>(<i>D<sub>L</sub></i>) − <span class="frac"><span class="num"><i>n<sub>R</sub></i></span><span class="den"><i>n</i></span></span><i>I</i>(<i>D<sub>R</sub></i>)</div>
+          <p class="formula-note">对候选阈值把节点分成左（L）右（R）两份，用子节点的不纯度按样本数加权，看比分裂前下降了多少。遍历所有特征的所有候选阈值，挑 Δ 最大的那一刀——演示中的"下次分裂"提示就是它。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>递归二分：空间被切成矩形</h4>
+          <div class="formula-figure" aria-hidden="true">
+            <svg viewBox="0 0 240 110">
+              <rect x="14" y="8" width="112" height="94" fill="rgba(0,113,227,0.16)" stroke="rgba(0,0,0,0.16)"></rect>
+              <rect x="126" y="8" width="100" height="94" fill="rgba(140,140,146,0.20)" stroke="rgba(0,0,0,0.16)"></rect>
+              <rect x="126" y="55" width="48" height="47" fill="rgba(0,113,227,0.32)" stroke="#ffffff" stroke-width="1.5"></rect>
+              <text x="58" y="60" font-size="10" fill="#0a3f7e" font-weight="600">类 1</text>
+              <text x="164" y="36" font-size="10" fill="#55555a" font-weight="600">类 0</text>
+              <text x="140" y="84" font-size="10" fill="#0a3f7e" font-weight="600">类 1</text>
+              <text x="20" y="24" font-size="9" fill="#6e6e73">x₁ ≤ 0.56 ?</text>
+              <text x="130" y="24" font-size="9" fill="#6e6e73">x₂ ≤ 0.50 ?</text>
+              <circle cx="34" cy="70" r="3" fill="#0071e3" fill-opacity="0.8"></circle>
+              <circle cx="52" cy="82" r="3" fill="#0071e3" fill-opacity="0.8"></circle>
+              <circle cx="86" cy="52" r="3" fill="#0071e3" fill-opacity="0.8"></circle>
+              <circle cx="150" cy="30" r="3" fill="#8e8e93"></circle>
+              <circle cx="180" cy="44" r="3" fill="#8e8e93"></circle>
+              <circle cx="204" cy="24" r="3" fill="#8e8e93"></circle>
+              <circle cx="140" cy="76" r="3" fill="#0071e3" fill-opacity="0.8"></circle>
+              <circle cx="164" cy="88" r="3" fill="#0071e3" fill-opacity="0.8"></circle>
+            </svg>
+          </div>
+          <p class="formula-note" style="margin-top:0;">每次分裂都平行于坐标轴，所以树的决策边界永远是若干段水平 / 竖直线，预测区域是一块块矩形。递归在以下情况停止：节点只剩一类、样本数太少、或达到最大深度。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>深度与过拟合</h4>
+          <div class="formula"><i>预测</i> = 多数类 <span class="frac"><span class="num">叶子内各类样本数</span><span class="den">叶子内样本总数</span></span></div>
+          <p class="formula-note">树越深，叶子越纯，训练准确率越高；但太深的树在"背"噪声，测试准确率反而回落——这就是过拟合。限制最大深度是最简单的剪枝：让树停在刚刚好的地方。演示下方面板会实时画出两条准确率曲线的分叉。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 交互模块 ============ -->
+  <section class="demo">
+    <div class="container-wide">
+
+      <div class="control-card">
+        <div class="threshold-head">
+          <div>
+            <span class="threshold-label">最大深度</span>
+            <span class="threshold-value" id="md-value">4</span>
+          </div>
+          <div class="threshold-actions">
+            <button type="button" class="btn-quiet active" id="btn-gini">基尼</button>
+            <button type="button" class="btn-quiet" id="btn-entropy">熵</button>
+            <button type="button" class="btn-quiet" id="btn-step">单步分裂</button>
+            <button type="button" class="btn-quiet" id="btn-play">播放</button>
+            <button type="button" class="btn-quiet" id="btn-reset">重置</button>
+            <button type="button" class="btn-quiet" id="btn-resample">换一批数据</button>
+          </div>
+        </div>
+        <input type="range" id="md" min="1" max="8" step="1" value="4" aria-label="最大深度">
+        <div class="threshold-scale">
+          <span>1 粗糙</span>
+          <span>每次分裂选择不纯度下降最大的叶子</span>
+          <span>8 容易过拟合</span>
+        </div>
+      </div>
+
+      <div class="panels">
+
+        <section class="panel" id="panel-region" style="grid-area:a;">
+          <header class="panel-head">
+            <div>
+              <h3>数据与决策区域</h3>
+              <p>每个叶子的矩形区域按多数类着色，白色描边是分裂边界</p>
+            </div>
+            <span class="panel-tag accent" id="region-tag">叶子 1</span>
+          </header>
+          <div class="panel-body">
+            <svg id="region-svg" viewBox="0 0 640 320" role="img" aria-label="双月牙样本与决策树切出的矩形决策区域"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-tree" style="grid-area:b;">
+          <header class="panel-head">
+            <div>
+              <h3>树结构</h3>
+              <p>方框内是样本数，颜色按多数类；点击叶子可直接分裂</p>
+            </div>
+            <span class="panel-tag" id="tree-tag">深度 0</span>
+          </header>
+          <div class="panel-body">
+            <svg id="tree-svg" viewBox="0 0 360 320" role="img" aria-label="决策树结构图，节点标注分裂条件与样本数"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-curve" style="grid-area:c;">
+          <header class="panel-head">
+            <div>
+              <h3>生长曲线</h3>
+              <p>训练 / 测试准确率随叶子数增加的变化</p>
+            </div>
+            <span class="panel-tag accent" id="curve-tag">测试 —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="curve-svg" viewBox="0 0 360 320" role="img" aria-label="训练与测试准确率随叶子数增加的曲线，反映过拟合"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-params" style="grid-area:d;">
+          <header class="panel-head">
+            <div>
+              <h3>参数与指标</h3>
+              <p>当前树的结构与泛化表现</p>
+            </div>
+          </header>
+          <div class="panel-body" style="display:block;">
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">树深度</span><span class="metric-value" id="p-depth">0</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">叶子数</span><span class="metric-value" id="p-leaves">1</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">训练准确率</span><span class="metric-value" id="p-train">—</span></div>
+                <div class="metric-bar"><span id="b-train"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">测试准确率</span><span class="metric-value" id="p-test">—</span></div>
+                <div class="metric-bar"><span id="b-test"></span></div>
+              </div>
+            </div>
+            <p class="metric-foot" id="p-next">下次分裂：—</p>
+            <span class="warn-badge" id="warn-badge" hidden>测试明显低于训练：出现过拟合迹象，试着调小最大深度</span>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="drag-hint">提示：先点"播放"看树怎么一刀刀生长；再把最大深度拉到 8，观察训练准确率逼近 100% 而测试准确率回落——分叉处就是过拟合的开始。</p>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>决策树 · 机器学习交互演示中心</p>
+    <p>数据由页面内合成，仅用于教学演示，2026</p>
+  </div>
+</footer>
+
+<div id="selftest" hidden></div>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/demo-tree.js"></script>
+</body>
+</html>

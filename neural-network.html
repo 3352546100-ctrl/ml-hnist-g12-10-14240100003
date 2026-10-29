@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>神经网络 · 机器学习交互演示中心</title>
+<meta name="description" content="先理解神经元、激活函数、前向传播与反向传播的理论，再看一个多层感知机如何把线性分不开的双月牙数据围出弯曲的边界。">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="glass-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-glyph">ML</span>
+      <span class="brand-name">机器学习交互演示中心</span>
+    </a>
+    <nav class="nav-links" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="model-evaluation.html">模型评估</a>
+      <a href="linear-regression.html">线性回归</a>
+      <a href="logistic-regression.html">Logistic 回归</a>
+      <a href="decision-tree.html">决策树</a>
+      <a href="neural-network.html" class="active" aria-current="page">神经网络</a>
+      <a href="svm.html">支持向量机</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <a class="crumb" href="../index.html">← 返回首页</a>
+      <p class="eyebrow">板块 05 / 10</p>
+      <h1 class="page-title">神经网络</h1>
+      <p class="page-sub">一个神经元就是"加权求和再激活"；把几十个神经元叠成两层，就能围出任意弯曲的边界。本板块先讲清神经元、前向传播与反向传播三件事，再进入交互演示——看一个多层感知机如何在双月牙数据上一步步学出弯曲的分类边界。</p>
+    </div>
+  </section>
+
+  <!-- ============ 理论区（先于交互模块） ============ -->
+  <section class="theory">
+    <div class="container">
+      <h2 class="section-title">理论与公式</h2>
+      <p class="theory-lead">Logistic 回归只有一条直线边界，遇上双月牙这样的数据就无能为力。神经网络的解法是<b>堆叠隐藏层</b>：每个隐藏神经元学一条"折线"，输出层把它们加权组合，边界便可以任意弯曲。训练的核心是<b>反向传播</b>——用链式法则把损失从输出层一层层传回，算出每个权重的梯度。</p>
+      <div class="formula-grid">
+
+        <div class="formula-card">
+          <h4>神经元与激活函数</h4>
+          <div class="formula-figure" aria-hidden="true">
+            <svg viewBox="0 0 240 110">
+              <circle cx="26" cy="26" r="5" fill="rgba(0,113,227,0.55)"></circle>
+              <circle cx="26" cy="84" r="5" fill="rgba(0,113,227,0.55)"></circle>
+              <text x="26" y="12" font-size="10" fill="#6e6e73" text-anchor="middle">x₁</text>
+              <text x="26" y="103" font-size="10" fill="#6e6e73" text-anchor="middle">x₂</text>
+              <line x1="33" y1="29" x2="112" y2="50" stroke="#0071e3" stroke-width="2" stroke-opacity="0.7"></line>
+              <line x1="33" y1="81" x2="112" y2="62" stroke="#1d1d1f" stroke-width="3.4" stroke-opacity="0.55"></line>
+              <text x="66" y="30" font-size="9.5" fill="#6e6e73">w₁</text>
+              <text x="66" y="88" font-size="9.5" fill="#6e6e73">w₂</text>
+              <circle cx="140" cy="56" r="19" fill="rgba(0,113,227,0.10)" stroke="#0071e3" stroke-width="1.6"></circle>
+              <text x="140" y="60" font-size="11" fill="#0071e3" text-anchor="middle" font-weight="600">Σ g</text>
+              <text x="140" y="24" font-size="9.5" fill="#6e6e73" text-anchor="middle">b</text>
+              <line x1="161" y1="56" x2="206" y2="56" stroke="#0071e3" stroke-width="2" stroke-opacity="0.7"></line>
+              <polygon points="206,56 199,52.5 199,59.5" fill="#0071e3" fill-opacity="0.7"></polygon>
+              <text x="222" y="60" font-size="11" fill="#6e6e73" text-anchor="middle">a</text>
+            </svg>
+          </div>
+          <p class="formula-note" style="margin-top:0;">神经元先对输入加权求和（z = w·x + b），再经过非线性激活 g。常用的 g：ReLU = max(0, z)，tanh，Sigmoid。没有非线性激活，叠多少层都等价于一条直线。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>前向传播：一层层算下去</h4>
+          <div class="formula"><i>a</i><sup>(<i>l</i>)</sup> = <i>g</i>( <i>W</i><sup>(<i>l</i>)</sup><i>a</i><sup>(<i>l</i>−1)</sup> + <i>b</i><sup>(<i>l</i>)</sup> )</div>
+          <p class="formula-note">第 l 层把上一层的激活值 a<sup>(l−1)</sup> 乘上权重矩阵 W、加上偏置 b，再过激活函数。输入是两个特征，输出层用 Sigmoid 把结果压成概率 p。结构按钮里的"2×8"表示两个隐藏层、每层 8 个神经元。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>损失与反向传播</h4>
+          <div class="formula"><i>L</i> = − <span class="frac"><span class="num">1</span><span class="den">n</span></span> Σ [ <i>y<sub>i</sub></i> log <i>p<sub>i</sub></i> + (1−<i>y<sub>i</sub></i>) log(1−<i>p<sub>i</sub></i>) ]</div>
+          <div class="formula"><i>δ</i><sup>(<i>l</i>)</sup> = ( <i>W</i><sup>(<i>l</i>+1)</sup> )<sup>⊤</sup><i>δ</i><sup>(<i>l</i>+1)</sup> ⊙ <i>g</i>′(<i>z</i><sup>(<i>l</i>)</sup>)</div>
+          <p class="formula-note">输出误差 δ 从损失出发，沿链式法则逐层回传（⊙ 是逐元素乘激活函数的导数），每个权重的梯度就是 δ 乘上它前面的激活值。整个过程和板块 02、03 的梯度下降一脉相承，只是梯度改由反向传播高效计算。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>隐藏层为何能弯折边界</h4>
+          <div class="formula"><i>p</i> = <i>σ</i>( Σ<sub><i>j</i></sub> <i>v<sub>j</sub></i>·ReLU(<i>w<sub>j</sub></i>·<i>x</i> + <i>b<sub>j</sub></i>) + <i>c</i> )</div>
+          <p class="formula-note">每个隐藏神经元贡献一条直线"折痕"，输出层用权重 v 把折痕拼起来：折痕够多，就能围出月牙、圆环等任意形状——这是通用逼近的直觉。权重越粗（下方面板中线条越粗）说明该连接影响越大。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 交互模块 ============ -->
+  <section class="demo">
+    <div class="container-wide">
+
+      <div class="control-card">
+        <div class="threshold-head">
+          <div>
+            <span class="threshold-label">学习率 η</span>
+            <span class="threshold-value" id="lr-value">1.20</span>
+          </div>
+          <div class="threshold-actions">
+            <button type="button" class="btn-quiet" id="btn-h4">1×4</button>
+            <button type="button" class="btn-quiet" id="btn-h8">1×8</button>
+            <button type="button" class="btn-quiet active" id="btn-h88">2×8</button>
+            <button type="button" class="btn-quiet" id="btn-h1616">2×16</button>
+            <button type="button" class="btn-quiet" id="btn-relu">ReLU</button>
+            <button type="button" class="btn-quiet active" id="btn-tanh">tanh</button>
+            <button type="button" class="btn-quiet" id="btn-sigmoid">Sigmoid</button>
+            <button type="button" class="btn-quiet" id="btn-step">单步训练</button>
+            <button type="button" class="btn-quiet" id="btn-play">播放</button>
+            <button type="button" class="btn-quiet" id="btn-reset">重置参数</button>
+            <button type="button" class="btn-quiet" id="btn-resample">换一批数据</button>
+          </div>
+        </div>
+        <input type="range" id="lr" min="0.1" max="3" step="0.05" value="1.2" aria-label="学习率 η">
+        <div class="threshold-scale">
+          <span>0.1 慢而稳</span>
+          <span>每轮全批量梯度下降（反向传播）</span>
+          <span>3 可能震荡发散</span>
+        </div>
+      </div>
+
+      <div class="panels">
+
+        <section class="panel" id="panel-dom" style="grid-area:a;">
+          <header class="panel-head">
+            <div>
+              <h3>数据与决策区域</h3>
+              <p>底色是网络输出的概率场，蓝代表类 1、灰代表类 0</p>
+            </div>
+            <span class="panel-tag accent" id="dom-tag">训练 —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="dom-svg" viewBox="0 0 640 320" role="img" aria-label="双月牙样本与神经网络输出的概率热图"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-net" style="grid-area:b;">
+          <header class="panel-head">
+            <div>
+              <h3>网络结构</h3>
+              <p>线条粗细与颜色实时反映权重的大小与正负</p>
+            </div>
+            <span class="panel-tag" id="net-tag">2×8 · tanh</span>
+          </header>
+          <div class="panel-body">
+            <svg id="net-svg" viewBox="0 0 360 320" role="img" aria-label="多层感知机结构图，边的粗细与颜色表示权重"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-loss" style="grid-area:c;">
+          <header class="panel-head">
+            <div>
+              <h3>损失下降曲线</h3>
+              <p>交叉熵损失随训练轮数的变化</p>
+            </div>
+            <span class="panel-tag accent" id="loss-tag">损失 —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="loss-svg" viewBox="0 0 360 320" role="img" aria-label="交叉熵损失随训练轮数下降的曲线"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-params" style="grid-area:d;">
+          <header class="panel-head">
+            <div>
+              <h3>参数与指标</h3>
+              <p>当前网络的学习进度与泛化表现</p>
+            </div>
+          </header>
+          <div class="panel-body" style="display:block;">
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">训练轮数</span><span class="metric-value" id="p-epoch">0</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">交叉熵损失</span><span class="metric-value" id="p-loss">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">训练准确率</span><span class="metric-value" id="p-train">—</span></div>
+                <div class="metric-bar"><span id="b-train"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">测试准确率</span><span class="metric-value" id="p-test">—</span></div>
+                <div class="metric-bar"><span id="b-test"></span></div>
+              </div>
+            </div>
+            <p class="metric-foot" id="p-arch">结构 2-8-8-1 · 激活 tanh · 数据：双月牙</p>
+            <span class="warn-badge" id="warn-badge" hidden>损失发散：学习率过大，请调小后重置参数</span>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="drag-hint">提示：默认"2×8 + tanh"点播放即可看到边界被慢慢"折"出来；换成 Sigmoid 会明显变慢，换成 1×4 则边界只能勉强弯一次——容量决定表达力。</p>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>神经网络 · 机器学习交互演示中心</p>
+    <p>数据由页面内合成，仅用于教学演示，2026</p>
+  </div>
+</footer>
+
+<div id="selftest" hidden></div>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/demo-nn.js"></script>
+</body>
+</html>

@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Logistic 回归 · 机器学习交互演示中心</title>
+<meta name="description" content="先理解 Sigmoid、对数几率、决策边界与交叉熵损失的理论，再看决策边界如何随训练逐步就位。">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="glass-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-glyph">ML</span>
+      <span class="brand-name">机器学习交互演示中心</span>
+    </a>
+    <nav class="nav-links" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="model-evaluation.html">模型评估</a>
+      <a href="linear-regression.html">线性回归</a>
+      <a href="logistic-regression.html" class="active" aria-current="page">Logistic 回归</a>
+      <a href="decision-tree.html">决策树</a>
+      <a href="neural-network.html">神经网络</a>
+      <a href="svm.html">支持向量机</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <a class="crumb" href="../index.html">← 返回首页</a>
+      <p class="eyebrow">板块 03 / 10</p>
+      <h1 class="page-title">Logistic 回归</h1>
+      <p class="page-sub">名字里带"回归"，做的却是分类：在线性模型外套一层 Sigmoid，把任意实数分数压成 0 到 1 之间的概率。本板块先讲清 Sigmoid、对数几率、决策边界与交叉熵损失，再看边界如何随训练一步步就位。</p>
+    </div>
+  </section>
+
+  <!-- ============ 理论区（先于交互模块） ============ -->
+  <section class="theory">
+    <div class="container">
+      <h2 class="section-title">理论与公式</h2>
+      <p class="theory-lead">分类问题的输出是"是/否"，而线性模型 <b>z = w·x + b</b> 的输出是任意实数，直接当概率用既会小于 0 也会大于 1。Logistic 回归的解法是：<b>先线性打分，再用 Sigmoid 把分数压进 (0,1)</b>，作为样本为正类的概率估计。训练目标变成最小化交叉熵损失——下面的四个概念是读懂交互演示的全部前置知识。</p>
+      <div class="formula-grid">
+
+        <div class="formula-card">
+          <h4>Sigmoid 函数：分数变概率</h4>
+          <div class="formula"><i>σ</i>(<i>z</i>) = <span class="frac"><span class="num">1</span><span class="den">1 + e<sup>−z</sup></span></span></div>
+          <p class="formula-note">输出范围 (0,1)、单调递增，z = 0 时恰好输出 0.5。z 越大模型越确信"正类"，越小越确信"负类"。它处处可导，导数 σ′ = σ(1−σ)，梯度计算非常方便。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>对数几率：名字的由来</h4>
+          <div class="formula">log <span class="frac"><span class="num"><i>p</i></span><span class="den">1 − <i>p</i></span></span> = <i>z</i> = <i>w</i>·<i>x</i> + <i>b</i></div>
+          <p class="formula-note">正类概率与负类概率之比 p/(1−p) 叫做"几率"，取对数后（logit）恰好与特征呈线性关系——所以它本质上是<b>对分类问题做线性回归</b>，"对数几率回归"由此得名。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>决策边界：一条直线分两侧</h4>
+          <div class="formula-figure" aria-hidden="true">
+            <svg viewBox="0 0 240 110">
+              <line x1="14" y1="98" x2="228" y2="98" stroke="rgba(0,0,0,0.14)" stroke-width="1"></line>
+              <line x1="14" y1="98" x2="14" y2="8" stroke="rgba(0,0,0,0.14)" stroke-width="1"></line>
+              <line x1="150" y1="96" x2="70" y2="10" stroke="#1d1d1f" stroke-width="2" stroke-dasharray="5 4"></line>
+              <circle cx="46" cy="38" r="3.2" fill="#0071e3" fill-opacity="0.75"></circle>
+              <circle cx="66" cy="60" r="3.2" fill="#0071e3" fill-opacity="0.75"></circle>
+              <circle cx="38" cy="66" r="3.2" fill="#0071e3" fill-opacity="0.75"></circle>
+              <circle cx="60" cy="28" r="3.2" fill="#0071e3" fill-opacity="0.75"></circle>
+              <circle cx="176" cy="66" r="3.2" fill="#b9b9be"></circle>
+              <circle cx="196" cy="48" r="3.2" fill="#b9b9be"></circle>
+              <circle cx="204" cy="80" r="3.2" fill="#b9b9be"></circle>
+              <circle cx="182" cy="86" r="3.2" fill="#b9b9be"></circle>
+            </svg>
+          </div>
+          <p class="formula-note" style="margin-top:0;">规定 p ≥ 0.5 判为正类，而 p = 0.5 等价于 z = 0，即 <b>w₁x₁ + w₂x₂ + b = 0</b>——特征平面上的一条直线（黑色虚线）。训练就是不断挪动这条线。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>交叉熵损失：为什么要用它</h4>
+          <div class="formula"><i>L</i> = −<span class="frac"><span class="num">1</span><span class="den">n</span></span> Σ [ <i>y<sub>i</sub></i> ln <i>p<sub>i</sub></i> + (1 − <i>y<sub>i</sub></i>) ln(1 − <i>p<sub>i</sub></i>) ]</div>
+          <p class="formula-note">预测错误且越自信，惩罚越重。若改用 MSE，损失面会变成非凸，梯度下降容易卡进坏解；交叉熵配合 Sigmoid 使损失面保持<b>凸性</b>，且梯度恰好是"预测误差 × 特征"，形式简洁稳定。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 交互模块 ============ -->
+  <section class="demo">
+    <div class="container-wide">
+
+      <div class="control-card">
+        <div class="threshold-head">
+          <div>
+            <span class="threshold-label">学习率 η</span>
+            <span class="threshold-value" id="lr-value">5.0</span>
+          </div>
+          <div class="threshold-actions">
+            <button type="button" class="btn-quiet active" id="btn-clean">清晰数据</button>
+            <button type="button" class="btn-quiet" id="btn-noisy">含噪数据</button>
+            <button type="button" class="btn-quiet" id="btn-step">单步训练</button>
+            <button type="button" class="btn-quiet" id="btn-play">播放</button>
+            <button type="button" class="btn-quiet" id="btn-reset">重置参数</button>
+            <button type="button" class="btn-quiet" id="btn-resample">换一批数据</button>
+          </div>
+        </div>
+        <input type="range" id="lr" min="0.5" max="20" step="0.5" value="5" aria-label="学习率 η">
+        <div class="threshold-scale">
+          <span>0.5 慢而稳</span>
+          <span>每步沿交叉熵的负梯度更新 w₁、w₂、b</span>
+          <span>20 容易震荡</span>
+        </div>
+      </div>
+
+      <div class="panels">
+
+        <section class="panel" id="panel-dom" style="grid-area:a;">
+          <header class="panel-head">
+            <div>
+              <h3>数据与决策边界</h3>
+              <p>蓝/灰底色是模型的概率判断，黑线是 p = 0.5 边界</p>
+            </div>
+            <span class="panel-tag accent" id="acc-tag">准确率 —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="dom-svg" viewBox="0 0 640 320" role="img" aria-label="二维样本散点、概率热力图与决策边界线"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-sig" style="grid-area:b;">
+          <header class="panel-head">
+            <div>
+              <h3>Sigmoid 与样本分数</h3>
+              <p>两个圆点是正、负样本的平均线性分数位置</p>
+            </div>
+            <span class="panel-tag" id="z-tag">z̄ —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="sig-svg" viewBox="0 0 360 320" role="img" aria-label="Sigmoid 曲线与两类样本的平均分数位置"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-loss" style="grid-area:c;">
+          <header class="panel-head">
+            <div>
+              <h3>交叉熵损失</h3>
+              <p>损失随迭代步数的变化</p>
+            </div>
+            <span class="panel-tag accent" id="loss-tag">损失 —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="loss-svg" viewBox="0 0 360 320" role="img" aria-label="交叉熵损失随迭代步数下降的曲线"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-params" style="grid-area:d;">
+          <header class="panel-head">
+            <div>
+              <h3>参数与指标</h3>
+              <p>当前模型的系数与分类表现</p>
+            </div>
+          </header>
+          <div class="panel-body" style="display:block;">
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">准确率（p ≥ 0.5 判正）</span><span class="metric-value" id="p-acc">—</span></div>
+                <div class="metric-bar"><span id="b-acc"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">w₁（x₁ 系数）</span><span class="metric-value small" id="p-w1">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">w₂（x₂ 系数）</span><span class="metric-value small" id="p-w2">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">b（截距）</span><span class="metric-value small" id="p-b">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">迭代步数</span><span class="metric-value" id="p-steps">0</span></div>
+              </div>
+            </div>
+            <p class="metric-foot" id="p-eq">边界方程待训练后显示</p>
+            <span class="warn-badge" id="warn-badge" hidden>损失发散：学习率过大，请调小后重置参数</span>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="drag-hint">提示：切到"含噪数据"再训练，观察边界需要更多步数才能稳定，准确率上限也更低——这就是噪声的代价。</p>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>Logistic 回归 · 机器学习交互演示中心</p>
+    <p>数据由页面内合成，仅用于教学演示，2026</p>
+  </div>
+</footer>
+
+<div id="selftest" hidden></div>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/demo-logreg.js"></script>
+</body>
+</html>

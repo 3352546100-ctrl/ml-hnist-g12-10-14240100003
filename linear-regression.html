@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>线性回归 · 机器学习交互演示中心</title>
+<meta name="description" content="先理解最小二乘法、MSE 与梯度下降的理论，再看梯度下降如何在损失地形上一步步拟合直线。">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="glass-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-glyph">ML</span>
+      <span class="brand-name">机器学习交互演示中心</span>
+    </a>
+    <nav class="nav-links" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="model-evaluation.html">模型评估</a>
+      <a href="linear-regression.html" class="active" aria-current="page">线性回归</a>
+      <a href="logistic-regression.html">Logistic 回归</a>
+      <a href="decision-tree.html">决策树</a>
+      <a href="neural-network.html">神经网络</a>
+      <a href="svm.html">支持向量机</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <a class="crumb" href="../index.html">← 返回首页</a>
+      <p class="eyebrow">板块 02 / 10</p>
+      <h1 class="page-title">线性回归</h1>
+      <p class="page-sub">线性回归是机器学习的起点：用一条直线去拟合一堆散点。本板块先讲清最小二乘法、均方误差与梯度下降三件事，再进入交互演示——亲手调节学习率，看梯度下降在损失地形上爬山下谷。</p>
+    </div>
+  </section>
+
+  <!-- ============ 理论区（先于交互模块） ============ -->
+  <section class="theory">
+    <div class="container">
+      <h2 class="section-title">理论与公式</h2>
+      <p class="theory-lead">线性回归假设响应 y 与特征 x 之间近似线性：<b>y ≈ w·x + b</b>。训练目标是在一批样本上，找出让预测最接近真实值的那组 w（斜率）与 b（截距）。系数 w 有直观解释：<b>x 每增加 1 个单位，y 平均变化 w 个单位</b>——这就是"系数解释"。求这组系数有两条路：直接解方程（最小二乘解析解），或一步步迭代逼近（梯度下降）。</p>
+      <div class="formula-grid">
+
+        <div class="formula-card">
+          <h4>模型与最小二乘思想</h4>
+          <div class="formula-figure" aria-hidden="true">
+            <svg viewBox="0 0 240 110">
+              <line x1="14" y1="98" x2="228" y2="98" stroke="rgba(0,0,0,0.14)" stroke-width="1"></line>
+              <line x1="14" y1="98" x2="14" y2="8" stroke="rgba(0,0,0,0.14)" stroke-width="1"></line>
+              <line x1="16" y1="90" x2="222" y2="14" stroke="#0071e3" stroke-width="2" stroke-linecap="round"></line>
+              <circle cx="26" cy="82" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="54" cy="76" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="82" cy="62" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="110" cy="66" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="138" cy="48" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="166" cy="42" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="194" cy="28" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+              <circle cx="216" cy="24" r="3.2" fill="#0071e3" fill-opacity="0.7"></circle>
+            </svg>
+          </div>
+          <p class="formula-note" style="margin-top:0;">每个样本的残差 <i>e<sub>i</sub></i> = <i>y<sub>i</sub></i> − <i>ŷ<sub>i</sub></i>，即散点到直线的竖直距离。最小二乘法选择让<b>残差平方和</b>最小的那条直线。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>均方误差（MSE）：要最小化的损失</h4>
+          <div class="formula"><i>MSE</i> = <span class="frac"><span class="num">1</span><span class="den">n</span></span> Σ (<i>y<sub>i</sub></i> − <i>ŷ<sub>i</sub></i>)<sup>2</sup></div>
+          <p class="formula-note">把残差平方后取平均。平方有两个好处：正负误差不会互相抵消，且对大误差施加更重的惩罚。MSE 处处可导、光滑，是最常用的回归损失。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>解析解：正规方程</h4>
+          <div class="formula"><i>w</i> = <span class="frac"><span class="num">Σ(<i>x<sub>i</sub></i> − <i>x̄</i>)(<i>y<sub>i</sub></i> − <i>ȳ</i>)</span><span class="den">Σ(<i>x<sub>i</sub></i> − <i>x̄</i>)<sup>2</sup></span></span></div>
+          <div class="formula"><i>b</i> = <i>ȳ</i> − <i>w</i>·<i>x̄</i></div>
+          <p class="formula-note">对 MSE 求导并令导数为零，可以直接解出最优 w 和 b（图中"最优"标记点）。数据规模小时一步到位；但数据量大、特征多或模型复杂时，解析解代价太高，需要数值方法。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>梯度下降：一步步走下山</h4>
+          <div class="formula"><i>w</i> ← <i>w</i> − <i>η</i>·<span class="frac"><span class="num">∂<i>L</i></span><span class="den">∂<i>w</i></span></span>&nbsp;&nbsp;<i>b</i> ← <i>b</i> − <i>η</i>·<span class="frac"><span class="num">∂<i>L</i></span><span class="den">∂<i>b</i></span></span></div>
+          <p class="formula-note">沿着梯度的反方向（下坡最快的方向）小步更新参数，η 是学习率。η 过大会来回震荡甚至发散，过小则收敛很慢。下方交互演示的就是这个过程的全貌。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 交互模块 ============ -->
+  <section class="demo">
+    <div class="container-wide">
+
+      <div class="control-card">
+        <div class="threshold-head">
+          <div>
+            <span class="threshold-label">学习率 η</span>
+            <span class="threshold-value" id="lr-value">0.30</span>
+          </div>
+          <div class="threshold-actions">
+            <button type="button" class="btn-quiet" id="btn-step">单步下降</button>
+            <button type="button" class="btn-quiet" id="btn-play">播放</button>
+            <button type="button" class="btn-quiet" id="btn-reset">重置参数</button>
+            <button type="button" class="btn-quiet" id="btn-resample">换一批数据</button>
+          </div>
+        </div>
+        <input type="range" id="lr" min="0.02" max="1.50" step="0.01" value="0.30" aria-label="学习率 η">
+        <div class="threshold-scale">
+          <span>0.02 慢而稳</span>
+          <span>每步沿负梯度更新 w 与 b</span>
+          <span>1.50 可能发散</span>
+        </div>
+      </div>
+
+      <div class="panels">
+
+        <section class="panel" id="panel-fit" style="grid-area:a;">
+          <header class="panel-head">
+            <div>
+              <h3>数据与拟合</h3>
+              <p>灰色竖线是每个样本的残差，蓝线是当前模型</p>
+            </div>
+            <span class="panel-tag accent" id="fit-tag">ŷ = —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="fit-svg" viewBox="0 0 640 320" role="img" aria-label="样本散点与当前拟合直线，随梯度下降更新"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-terrain" style="grid-area:b;">
+          <header class="panel-head">
+            <div>
+              <h3>损失地形</h3>
+              <p>颜色越深损失越小，黑线是下降轨迹</p>
+            </div>
+            <span class="panel-tag" id="steps-tag">第 0 步</span>
+          </header>
+          <div class="panel-body">
+            <svg id="terrain-svg" viewBox="0 0 360 320" role="img" aria-label="以 w、b 为坐标的损失热力图与梯度下降轨迹"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-loss" style="grid-area:c;">
+          <header class="panel-head">
+            <div>
+              <h3>损失下降曲线</h3>
+              <p>MSE 随迭代步数的变化</p>
+            </div>
+            <span class="panel-tag accent" id="mse-tag">MSE —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="loss-svg" viewBox="0 0 360 320" role="img" aria-label="均方误差随迭代步数下降的曲线"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-params" style="grid-area:d;">
+          <header class="panel-head">
+            <div>
+              <h3>参数与指标</h3>
+              <p>当前模型的系数与拟合优度</p>
+            </div>
+          </header>
+          <div class="panel-body" style="display:block;">
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">斜率 w</span><span class="metric-value" id="p-w">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">截距 b</span><span class="metric-value" id="p-b">—</span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">决定系数 R²</span><span class="metric-value" id="p-r2">—</span></div>
+                <div class="metric-bar"><span id="b-r2"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">迭代步数</span><span class="metric-value" id="p-steps">0</span></div>
+              </div>
+            </div>
+            <p class="metric-foot" id="param-foot">60 个样本，由页面内合成；真实关系 y = 1.8x + 0.6 + 噪声</p>
+            <span class="warn-badge" id="warn-badge" hidden>损失发散：学习率过大，请调小后重置参数</span>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="drag-hint">提示：把学习率拉到 1.5 附近再点播放，可以观察到震荡与发散；调回 0.3 左右则平稳收敛。</p>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>线性回归 · 机器学习交互演示中心</p>
+    <p>数据由页面内合成，仅用于教学演示，2026</p>
+  </div>
+</footer>
+
+<div id="selftest" hidden></div>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/demo-linreg.js"></script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>模型评估 · 机器学习交互演示中心</title>
+<meta name="description" content="先理解混淆矩阵、ROC、AUC 与交叉验证的理论，再拖动判定阈值，实时观察评估指标的联动变化。">
+<meta name="theme-color" content="#f5f5f7">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230071e3'/%3E%3Ctext x='32' y='42' font-family='Arial' font-size='24' font-weight='700' fill='white' text-anchor='middle'%3EML%3C/text%3E%3C/svg%3E">
+<link rel="stylesheet" href="../assets/css/style.css">
+</head>
+<body>
+
+<div class="glass-bg" aria-hidden="true"><span class="b1"></span><span class="b2"></span><span class="b3"></span></div>
+
+<header class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="../index.html">
+      <span class="brand-glyph">ML</span>
+      <span class="brand-name">机器学习交互演示中心</span>
+    </a>
+    <nav class="nav-links" aria-label="站点导航">
+      <a href="../index.html">首页</a>
+      <a href="model-evaluation.html" class="active" aria-current="page">模型评估</a>
+      <a href="linear-regression.html">线性回归</a>
+      <a href="logistic-regression.html">Logistic 回归</a>
+      <a href="decision-tree.html">决策树</a>
+      <a href="neural-network.html">神经网络</a>
+      <a href="svm.html">支持向量机</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="page-hero">
+    <div class="container">
+      <a class="crumb" href="../index.html">← 返回首页</a>
+      <p class="eyebrow">板块 01 / 10</p>
+      <h1 class="page-title">模型评估</h1>
+      <p class="page-sub">训练出一个模型只是第一步，回答"它到底好不好"需要一套评估语言。本板块先建立混淆矩阵、ROC 与交叉验证的理论框架，再进入交互演示：拖动判定阈值，看所有评估数字如何联动。</p>
+    </div>
+  </section>
+
+  <!-- ============ 理论区（先于交互模块） ============ -->
+  <section class="theory">
+    <div class="container">
+      <h2 class="section-title">理论与公式</h2>
+      <p class="theory-lead">一个二分类模型为每个样本输出 0 到 1 之间的分数。<b>判定阈值 t</b> 决定分数≥t 的样本被判为正例。阈值往左移，更多样本被判为正：找回来的正样本变多，但误伤的负样本也变多；往右移则相反。<b>模型评估的所有指标，本质上都是在描述这次取舍。</b>下面的五个概念，是读懂右侧交互演示的全部前置知识。</p>
+      <div class="formula-grid">
+
+        <div class="formula-card">
+          <h4>混淆矩阵：四个计数</h4>
+          <div class="mini-matrix" aria-hidden="true">
+            <span>TP</span><span>FN</span><span>FP</span><span>TN</span>
+          </div>
+          <div class="def-list">
+            <p><b>TP 真正例</b>：实际为正，预测为正</p>
+            <p><b>FN 假负例</b>：实际为正，预测为负（漏报）</p>
+            <p><b>FP 假正例</b>：实际为负，预测为正（误报）</p>
+            <p><b>TN 真负例</b>：实际为负，预测为负</p>
+          </div>
+          <p class="formula-note">行代表真实类别，列代表预测类别。阈值越高，判为正的样本越少，TP 与 FP 同时变小。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>真阳率与假阳率：ROC 的两条轴</h4>
+          <div class="formula"><i>TPR</i> = <span class="frac"><span class="num">TP</span><span class="den">TP + FN</span></span></div>
+          <div class="formula"><i>FPR</i> = <span class="frac"><span class="num">FP</span><span class="den">FP + TN</span></span></div>
+          <p class="formula-note">TPR 是纵轴（即召回率），FPR 是横轴。让阈值 t 从 1 扫到 0，每个 t 对应平面上一个点，把这些点连起来就是 ROC 曲线。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>精确率与 F1 分数</h4>
+          <div class="formula"><i>Precision</i> = <span class="frac"><span class="num">TP</span><span class="den">TP + FP</span></span></div>
+          <div class="formula"><i>F1</i> = <span class="frac"><span class="num">2 × P × R</span><span class="den">P + R</span></span></div>
+          <p class="formula-note">精确率回答"被判为正的样本里有多少真的是正"，召回率回答"真正的正样本里找回了多少"，F1 是两者的调和平均。阈值调高，精确率往往上升而召回率下降，反之亦然。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>AUC：曲线下的面积</h4>
+          <div class="formula"><i>AUC</i> = <i>∫</i><sub>0</sub><sup>1</sup> <i>TPR</i> d(<i>FPR</i>)</div>
+          <p class="formula-note">概率含义：随机抽一个正样本和一个负样本，正样本得分更高的概率。1.0 为完美排序，0.5 等同随机猜测。AUC 只与分数排序有关，不依赖阈值。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>k 折交叉验证：更可靠的评估</h4>
+          <div class="mini-folds" aria-hidden="true">
+            <span class="fold-v"></span><span></span><span></span><span></span><span></span>
+          </div>
+          <p class="formula-note">把数据分成 k 份，轮流用其中 1 份做验证、其余 k−1 份做训练，重复 k 次后取指标平均（深色块为当前验证折，常用 k=5 或 10）。这样避免单次划分带来的偶然性，得到更稳定的泛化性能估计。</p>
+        </div>
+
+        <div class="formula-card">
+          <h4>怎么读 ROC 曲线</h4>
+          <p class="formula-note" style="margin-top:0;">左上角越凸，模型越理想：在很低的假阳率下就能达到很高的真阳率。工作点贴近对角线说明模型接近随机猜测；曲线在对角线下方说明预测方向反了。比较多个模型时，AUC 大者优先，但具体阈值仍要按业务代价选择。</p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 交互模块 ============ -->
+  <section class="demo">
+    <div class="container-wide">
+
+      <div class="control-card">
+        <div class="threshold-head">
+          <div>
+            <span class="threshold-label">判定阈值</span>
+            <span class="threshold-value" id="threshold-value">0.50</span>
+          </div>
+          <div class="threshold-actions">
+            <button type="button" class="btn-quiet" id="btn-reset">重置阈值</button>
+            <button type="button" class="btn-quiet" id="btn-resample">换一批样本</button>
+          </div>
+        </div>
+        <input type="range" id="threshold" min="0.01" max="0.99" step="0.005" value="0.5" aria-label="判定阈值 t">
+        <div class="threshold-scale">
+          <span>0.01</span>
+          <span>分数 ≥ t 判为正例</span>
+          <span>0.99</span>
+        </div>
+      </div>
+
+      <div class="panels">
+
+        <section class="panel" id="panel-dist" style="grid-area:a;">
+          <header class="panel-head">
+            <div>
+              <h3>得分分布</h3>
+              <p>正、负样本的打分分布，虚线为当前阈值</p>
+            </div>
+            <span class="panel-tag" id="n-tag">n = 1,000</span>
+          </header>
+          <div class="panel-body">
+            <svg id="dist-svg" viewBox="0 0 640 320" role="img" aria-label="正负样本得分分布直方图，可拖动虚线改变阈值"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-roc" style="grid-area:b;">
+          <header class="panel-head">
+            <div>
+              <h3>ROC 曲线</h3>
+              <p>在曲线上拖动圆点，同样可以改变阈值</p>
+            </div>
+            <span class="panel-tag accent" id="auc-tag">AUC —</span>
+          </header>
+          <div class="panel-body">
+            <svg id="roc-svg" viewBox="0 0 360 320" role="img" aria-label="ROC 曲线，可拖动工作点改变阈值"></svg>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-matrix" style="grid-area:c;">
+          <header class="panel-head">
+            <div>
+              <h3>混淆矩阵</h3>
+              <p>当前阈值下的四象限计数，颜色深度为行内占比</p>
+            </div>
+          </header>
+          <div class="panel-body">
+            <div class="matrix" role="img" aria-label="混淆矩阵热力图，随阈值实时变化">
+              <div></div>
+              <div class="matrix-colhead">预测为正</div>
+              <div class="matrix-colhead">预测为负</div>
+              <div class="matrix-rowhead"><span>实际<br>为正</span></div>
+              <div class="cell cell-light" id="cell-tp">
+                <span class="cell-count">0</span>
+                <span class="cell-name">TP · 真正例</span>
+                <span class="cell-pct">—</span>
+              </div>
+              <div class="cell cell-light" id="cell-fn">
+                <span class="cell-count">0</span>
+                <span class="cell-name">FN · 假负例</span>
+                <span class="cell-pct">—</span>
+              </div>
+              <div class="matrix-rowhead"><span>实际<br>为负</span></div>
+              <div class="cell cell-light" id="cell-fp">
+                <span class="cell-count">0</span>
+                <span class="cell-name">FP · 假正例</span>
+                <span class="cell-pct">—</span>
+              </div>
+              <div class="cell cell-light" id="cell-tn">
+                <span class="cell-count">0</span>
+                <span class="cell-name">TN · 真负例</span>
+                <span class="cell-pct">—</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" id="panel-metrics" style="grid-area:d;">
+          <header class="panel-head">
+            <div>
+              <h3>评估指标</h3>
+              <p>随阈值实时变化的四项指标</p>
+            </div>
+          </header>
+          <div class="panel-body" style="display:block;">
+            <div class="metrics">
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">准确率 Accuracy</span><span class="metric-value" id="m-acc">—</span></div>
+                <div class="metric-bar"><span id="b-acc"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">精确率 Precision</span><span class="metric-value" id="m-prec">—</span></div>
+                <div class="metric-bar"><span id="b-prec"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">召回率 Recall</span><span class="metric-value" id="m-rec">—</span></div>
+                <div class="metric-bar"><span id="b-rec"></span></div>
+              </div>
+              <div class="metric">
+                <div class="metric-top"><span class="metric-name">F1 分数</span><span class="metric-value" id="m-f1">—</span></div>
+                <div class="metric-bar"><span id="b-f1"></span></div>
+              </div>
+            </div>
+            <p class="metric-foot" id="metric-foot">样本总数 1,000，正样本 240，负样本 760，由页面内合成</p>
+          </div>
+        </section>
+
+      </div>
+
+      <p class="drag-hint">提示：阈值滑块、分布图中的虚线、ROC 曲线上的圆点都可以拖动，且始终联动。</p>
+
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container footer-inner">
+    <p>模型评估 · 机器学习交互演示中心</p>
+    <p>数据由页面内合成，仅用于教学演示，2026</p>
+  </div>
+</footer>
+
+<div id="selftest" hidden></div>
+<script src="../assets/js/main.js"></script>
+<script src="../assets/js/demo-eval.js"></script>
+</body>
+</html>
